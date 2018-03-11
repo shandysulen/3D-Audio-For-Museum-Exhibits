@@ -1,10 +1,9 @@
 import thinkdsp
 
 # Wave object contains:
-#   1. ys = array that contains values in the signal
+#   1. ys = array that contains intensity values in the signal
 #   2. ts = array of the times where the signal was evaluated or sampled
 #   3. framerate = number of samples per unit of time
-#
 
 # Create sin and cos Signal objects which are really just math functions
 cos_sig = thinkdsp.CosSignal(freq=440, amp=1.0, offset=0)
