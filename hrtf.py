@@ -3,13 +3,22 @@ import scipy.io as scp
 import matplotlib.pyplot as plt
 import numpy as np
 import sounddevice as sd
+import soundfile as sf
+import sys
 
 # Reads in a .wav file into a Wave object with frame rate of 44.1k Hz
-waveform = thinkdsp.read_wave('RiverStreamAdjusted.wav')
-samplerate = waveform.framerate
+try:
+    data, fs = sf.read('RiverStreamAdjusted.wav', dtype='float32')
+except RuntimeError:
+    print("Error: Audio file cannot be played, or it doesn't exist.")
+    sys.exit(0)
 
 # Reads in the HRTF database data file
-hrtf_db = scp.loadmat('CIPIC_58_HRTF.mat')
+try:
+    hrtf_db = scp.loadmat('CIPIC_58_HRTF.mat')
+except RuntimeError:
+    print("Error: Audio file cannot be played, or it doesn't exist.")
+    sys.exit(0)
 
 # 25 azimuth locations according to CIPIC
 azimuths = [-80, -65, -55, -45, -40,
@@ -55,9 +64,9 @@ else:
     rgt = rgt + zeros_delay
 
 # Perform convolution
-left_convolved = list(np.convolve(waveform.ys, lft))
-right_convolved = list(np.convolve(waveform.ys, rgt))
-zeros_samplerate = [0] * int(samplerate * 0.2)
+left_convolved = list(np.convolve(data, lft))
+right_convolved = list(np.convolve(data, rgt))
+zeros_samplerate = [0] * int(fs * 0.2)
 
 print("Left_convolved length", len(left_convolved))
 print("Right_convolved length", len(right_convolved))
@@ -78,6 +87,9 @@ print("Type of soundToPlay:", type(soundToPlay))
 print("Size of soundToPlay:", len(soundToPlay))
 
 # Play 3D audio!
-sd.play(soundToPlay.T, samplerate) # not playing sounds ?!?!?!?!
-
-print("Reached successful termination of program")
+try:
+    sd.play(soundToPlay.T, fs) # not playing sounds ?!?!?!?!
+    sd.wait()
+except:
+    print("Error with audio playback.")
+    sys.exit(0)

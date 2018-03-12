@@ -20,20 +20,19 @@ period = mix.period
 segment = wave.segment(start=0, duration=period*3)
 
 # Plot
-segment.plot()
-thinkdsp.pyplot.show()
+# segment.plot()
+# thinkdsp.pyplot.show()
 
 # Save the waveform as a Waveform Audio File (WAV)
 wave.write(filename='output.wav')
 
-# thinkdsp.play_wave(filename='output.wav', player='aplay') <---- replace aplay with another audio player
-
+thinkdsp.play_wave(filename='output.wav', player='wmplayer')
 # Create audio spectrum as a Spectrum object from the Wave object
 spectrum = wave.make_spectrum()
 
 # Plot
-spectrum.plot()
-thinkdsp.thinkplot.show() # Wrapper
+# spectrum.plot()
+# thinkdsp.thinkplot.show() # Wrapper
 
 # Read in a .wav file and use it as a Wave object
 water_wave = thinkdsp.read_wave('RiverStreamAdjusted.wav')
