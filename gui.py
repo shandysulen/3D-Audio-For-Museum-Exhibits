@@ -1,4 +1,5 @@
 import sys
+import hrtf
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QRadioButton,
     QToolTip, QPushButton, QDesktopWidget, QMessageBox, QGridLayout)
 from PyQt5.QtGui import QIcon, QFont, QPixmap
@@ -7,10 +8,36 @@ class window(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.radio_buttons = []
         self.initUI()
 
-    def initUI(self):
+    def hrtfWrapper(self):
+        """
+        Sets the proper arguments to be passed in to the hrtf function
+        """
+        radio_selected = 0
 
+        for i in range(len(self.radio_buttons)):
+            if self.radio_buttons[i].isChecked():
+                radio_selected = i + 1
+
+        fileName = 'audio/RiverStreamAdjusted.wav'
+        aIndex = 0
+        eIndex = 8
+
+        if radio_selected == 1:
+            aIndex = 12
+        elif radio_selected == 2:
+            aIndex = 24
+        elif radio_selected == 3:
+            aIndex = 0
+
+        hrtf.hrtf(fileName, aIndex, eIndex)
+
+    def initUI(self):
+        """
+        Sets up the GUI for the application
+        """
         # Set initial size of window and placement of window
         self.resize(800,400)
 
@@ -35,6 +62,7 @@ class window(QWidget):
         play_btn = QPushButton('Play')
         play_btn.setToolTip('Begin playback of 3D audio')
         play_btn.resize(100,33)
+        play_btn.clicked.connect(self.hrtfWrapper)
 
         # Customize stop button
         stop_btn = QPushButton('Stop')
@@ -49,16 +77,13 @@ class window(QWidget):
         # Customize radio buttons
         radio_one = QRadioButton("1")
         radio_one.setChecked(True)
-        # radio_one.toggled.connect()
+        self.radio_buttons.append(radio_one)
 
         radio_two = QRadioButton("2")
-        # radio_two.toggled.connect()
+        self.radio_buttons.append(radio_two)
 
         radio_three = QRadioButton("3")
-        # radio_three.toggled.connect()
-
-        radio_four = QRadioButton("4")
-        # radio_four.toggled.connect()
+        self.radio_buttons.append(radio_three)
 
         # Add button widgets to grid
         grid.addWidget(QWidget(), 1, 1, 1, 3) # empty space
@@ -69,15 +94,17 @@ class window(QWidget):
         grid.addWidget(radio_one, 1, 4) # first radio button
         grid.addWidget(radio_two, 2, 4) # second radio button
         grid.addWidget(radio_three, 3, 4) # third radio button
-        grid.addWidget(radio_four, 4, 4) # fourth radio button
         grid.addWidget(QWidget(), 1, 5, 4, 1) # empty space
 
         # Show the window
         self.show()
 
     def closeEvent(self, event):
-
-        reply = QMessageBox.question(self, 'Message',
+        """
+        Overrides the closeEvent function to ask if the user really wants to quit
+        the real-time application
+        """
+        reply = QMessageBox.question(self, '3D Audio for Museum Exhibits',
             "Are you sure you wish to quit?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
 
