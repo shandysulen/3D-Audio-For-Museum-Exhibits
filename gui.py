@@ -78,14 +78,14 @@ class window(QWidget):
         canvas_lbl.setPixmap(canvas)
 
         # Customize radio buttons
-        radio_one = QRadioButton("Rice")
+        radio_one = QRadioButton("1 - Rice Cooking")
         radio_one.setChecked(True)
         self.radio_buttons.append(radio_one)
 
-        radio_two = QRadioButton("Steak")
+        radio_two = QRadioButton("2 - Steak Searing")
         self.radio_buttons.append(radio_two)
 
-        radio_three = QRadioButton("Plantains")
+        radio_three = QRadioButton("3 - Plantains Frying")
         self.radio_buttons.append(radio_three)
 
         # Add button widgets to grid
