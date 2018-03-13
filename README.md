@@ -14,7 +14,7 @@ Next, you will need [PIP](https://pypi.python.org/pypi/pip) (Python Package Inde
 
 *Note: For ease of use, it is recommended that you also add the directory path that PIP lies in to the PATH environment variable on your local machine for ease of access.*
 
-In order to suitably experience the application, assure that the local machine the application includes a headphone jack for in-ear listening. Headphones or earphones are required to properly register the 3D audio.
+In order to suitably experience the application, assure that the local machine that the application is running on includes a headphone jack for in-ear listening. Headphones or earphones are required to properly register the 3D audio.
 ### Installing
 Navigate to the directory that holds pip.exe (or if the directory path is included in your local machine's PATH environment variable, navigate anywhere) and install the following required modules:
 
