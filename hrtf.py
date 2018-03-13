@@ -1,5 +1,4 @@
 import scipy.io as scp
-import matplotlib.pyplot as plt
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
@@ -18,7 +17,7 @@ def hrtf(fileName, aIndex, eIndex):
     """
     # Reads in a .wav file into a Wave object with frame rate of 44.1k Hz
     try:
-        data, fs = sf.read(fileName, dtype='float32')
+        data, fs = sf.read('audio/RiverStreamAdjusted.wav', dtype='float32')
     except RuntimeError:
         print("Error: Audio file cannot be played, or it doesn't exist.")
         sys.exit(0)
@@ -59,6 +58,9 @@ def hrtf(fileName, aIndex, eIndex):
     else:
         lft = zeros_delay + lft
         rgt = rgt + zeros_delay
+
+    print("data type:", type(data))
+    print("shape of data:", data.shape)
 
     # Perform convolution
     left_convolved = list(np.convolve(data, lft))

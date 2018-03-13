@@ -21,15 +21,18 @@ class window(QWidget):
             if self.radio_buttons[i].isChecked():
                 radio_selected = i + 1
 
-        fileName = 'audio/RiverStreamAdjusted.wav'
+        fileName = ''
         aIndex = 0
-        eIndex = 8
+        eIndex = 8 # about line of sight elevation
 
         if radio_selected == 1:
+            fileName = 'audio/rice_pouring.wav'
             aIndex = 12
         elif radio_selected == 2:
+            fileName = 'audio/searing_steak.wav'
             aIndex = 24
         elif radio_selected == 3:
+            fileName = 'audio/plantain_frying.wav'
             aIndex = 0
 
         hrtf.hrtf(fileName, aIndex, eIndex)
@@ -75,14 +78,14 @@ class window(QWidget):
         canvas_lbl.setPixmap(canvas)
 
         # Customize radio buttons
-        radio_one = QRadioButton("1")
+        radio_one = QRadioButton("Rice")
         radio_one.setChecked(True)
         self.radio_buttons.append(radio_one)
 
-        radio_two = QRadioButton("2")
+        radio_two = QRadioButton("Steak")
         self.radio_buttons.append(radio_two)
 
-        radio_three = QRadioButton("3")
+        radio_three = QRadioButton("Plantains")
         self.radio_buttons.append(radio_three)
 
         # Add button widgets to grid
