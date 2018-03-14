@@ -26,13 +26,13 @@ class window(QWidget):
         eIndex = 8 # about line of sight elevation
 
         if radio_selected == 1:
-            fileName = 'audio/rice_pouring.wav'
+            fileName = 'audio/rice_pouring_mono.wav'
             aIndex = 12
         elif radio_selected == 2:
-            fileName = 'audio/searing_steak.wav'
+            fileName = 'audio/steak_searing_mono.wav'
             aIndex = 24
         elif radio_selected == 3:
-            fileName = 'audio/plantain_frying.wav'
+            fileName = 'audio/plantain_frying_mono.wav'
             aIndex = 0
 
         hrtf.hrtf(fileName, aIndex, eIndex)
