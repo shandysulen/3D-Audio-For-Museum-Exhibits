@@ -79,7 +79,8 @@ def hrtf(fileName, aIndex, eIndex):
     soundToPlay = soundToPlay.T
 
     # Save 3D audio file for playback
-    sf.write('hrtf.wav', soundToPlay, fs)
+    # sf.write('hrtf.wav', soundToPlay, fs)
+    return soundToPlay
 
 # start with 5 ft as the cutoff for the sounds
 # to get multiple sounds, just add the left channels with one another and
