@@ -2,9 +2,10 @@ import hrtf # used for 3D audio
 import time
 import random
 import pyaudio
+from pydub import AudioSegment
 import wave
 
-CHUNK = 512
+CHUNK = 32768 # 2^15
 
 # Get line of sight elevation index and leftmost azimuth index
 eIndex = 8
@@ -14,7 +15,7 @@ aIndex = 0
 p = pyaudio.PyAudio()
 
 # create 3D audio file
-hrtf.hrtf('audio/plantain_frying_mono.wav', aIndex, eIndex)
+hrtf.hrtf('audio/RiverStreamAdjusted.wav', aIndex, eIndex)
 
 # open file
 wf = wave.open('hrtf.wav', 'rb')
@@ -25,31 +26,50 @@ stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
                 rate=wf.getframerate(),
                 output=True)
 
-# read initial data
+# # set loop boolean flag
+# loop = True
+
+# Read in buffered data
 data = wf.readframes(CHUNK)
 
-# set loop boolean flag
-loop = True
+currentPos = 0
 
 # loop stream
-while loop:
+while len(data) > 0:
+    old_aIndex = aIndex
+    old_eIndex = eIndex
 
     # Play sound
     stream.write(data)
 
-    # Read in buffered data
-    data = wf.readframes(CHUNK)
+    # Get position in data
+    currentPos = wf.tell()
+    print(currentPos)
 
     # Load the file with new azimuth and elevation
-    if len(data) == 0:
-        r = random.random()
-        aIndex = aIndex + 3 if (r > 0.5) else eIndex + 3
-        hrtf.hrtf('audio/plantain_frying_mono.wav', aIndex, eIndex)
+    r = random.random()
+    if (r > 0.5):
+        aIndex = old_aIndex + 1
+    else:
+        eIndex = old_eIndex + 3
+
+    if aIndex != old_aIndex or eIndex != old_eIndex:
+        hrtf.hrtf('audio/RiverStreamAdjusted.wav', aIndex, eIndex)
+        # sound = AudioSegment.from_wav("hrtf.wav")
+        # soundWithFadeIn = sound.fade_in(1000)
+        # soundWithFadeIn.export("hrtf.wav", format="wav")
         wf = wave.open('hrtf.wav', 'rb')
-        data = wf.readframes(CHUNK)
+        try:
+            wf.setpos(currentPos)
+        except wave.Error:
+            print("Nearing end of data, could not update position")
+
+    data = wf.readframes(CHUNK)
 
 # stop stream and PyAudio
 stream.stop_stream()
 stream.close()
 wf.close()
 p.terminate()
+
+# try instead of saving as a file, just keeping it in memory
