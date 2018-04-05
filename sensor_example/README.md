@@ -1,0 +1,8 @@
+This is a simple example show you how to read the localization information from the sensor. marvelmind.py is the python library from the [manufacture on bitbucket](https://bitbucket.org/marvelmind_robotics/marvelmind.py). To start the program, you need to find the device tty ID of the sensor on your computer/pi. And this value may different from device to device. Using command `ls /dev/ |grep usb` you may found the exact ID. For example, on my local MAC, it's `/dev/tty.usbmodem1421`. But on a RaspeberryPi it may different. More details can be found from the README file, or code comment of the marvelmind.py library.
+
+In the example, there are 3 values may be useful:
+* `valuesUltrasoundPosition` - buffer of US position measures
+* `valuesImuRawData` - buffer of IMU raw measures (accelerometer, gyroscope, compass)
+* `valuesImuData` - buffer of IMU and US based measures `(position, angular position (quaternion), velocities, accelerations) [x, y, z, qw, qx, qy, qz, vx, vy, vz, ax, ay, az, timestamp]`      
+
+However, valuesImuData is not working currently, maybe the packet has not been supported yet in current version. I will keep an eye that if there's an update, I may updated it here. But you can get the gyro data through valuesImuRawData, and the position data from print_position method. Go through to marvelmind module, you will find the valuesUltrasoundPosition list holds the position. e.g. p[0] for beacon id, p[1] for x, p[2] for y, p[3] for z. You should play with them and try to get more location information. 
