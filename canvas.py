@@ -1,7 +1,7 @@
 import pygame
 
 #pygame.init()
-screen = pygame.display.set_mode((1000, 1000))
+screen = pygame.display.set_mode((620, 620))
 done = False
 white = (255, 255, 255)
 screen.fill(white)
@@ -19,28 +19,36 @@ seven=pygame.image.load("7.png")
 eight=pygame.image.load("8.png")
 nine=pygame.image.load("9.png")
 ten=pygame.image.load("10.png")
+eleven = pygame.image.load("11.png")
+twelve=pygame.image.load("12.png")
+thirteen=pygame.image.load("13.png")
+fourteen=pygame.image.load("14.png")
+fifteen=pygame.image.load("15.png")
+entrance = pygame.image.load("entrance.png")
 
 
 
 pic = pygame.transform.scale(compass, (80, 80))
-lunch_box=pygame.transform.scale(lunch,(50,50))
-holidays_box=pygame.transform.scale(holidays,(50,50))
-restuarants_box=pygame.transform.scale(restauranrts,(50,50))
-four_box=pygame.transform.scale(four,(50,50))
-five_box=pygame.transform.scale(five,(50,50))
-six_box=pygame.transform.scale(six,(50,50))
-seven_box=pygame.transform.scale(seven,(50,50))
-eight_box=pygame.transform.scale(eight,(50,50))
-nine_box=pygame.transform.scale(nine,(50,50))
-ten_box=pygame.transform.scale(ten,(50,50))
-
-
-
-
+lunch_box=pygame.transform.scale(lunch,(20,20))
+holidays_box=pygame.transform.scale(holidays,(20,20))
+restuarants_box=pygame.transform.scale(restauranrts,(20,20))
+four_box=pygame.transform.scale(four,(20,20))
+five_box=pygame.transform.scale(five,(20,20))
+six_box=pygame.transform.scale(six,(20,20))
+seven_box=pygame.transform.scale(seven,(20,20))
+eight_box=pygame.transform.scale(eight,(20,20))
+nine_box=pygame.transform.scale(nine,(20,20))
+ten_box=pygame.transform.scale(ten,(20,20))
+eleven_box=pygame.transform.scale(eleven,(20,20))
+twelve_box=pygame.transform.scale(twelve,(20,20))
+thirteen_box=pygame.transform.scale(thirteen,(20,20))
+fourteen_box=pygame.transform.scale(fourteen,(20,20))
+fifteen_box=pygame.transform.scale(fifteen,(20,20))
+entrance_box = pygame.transform.scale(entrance,(20,20))
 
 is_blue = True
-x = 10
-y = 10
+x = 350
+y = 605
 
 clock = pygame.time.Clock()
 
@@ -58,23 +66,29 @@ while not done:
         if pressed[pygame.K_RIGHT]: x += 1
         
         screen.fill((255, 255, 255))
-        pygame.draw.line(screen, (0, 0, 0), (0, 250), (800, 250))
-        pygame.draw.line(screen, (0, 0, 0), (250, 0), (250, 800))
+        pygame.draw.line(screen, (0, 0, 0), (0, 300), (800, 300))
+        pygame.draw.line(screen, (0, 0, 0), (300, 0), (300, 800))
         screen.blit(pic,(0,500))
-        screen.blit(lunch_box,(250,450))
-        screen.blit(holidays_box,(250,400))
-        screen.blit(restuarants_box,(250,350))
-        screen.blit(four_box,(250,300))
-        screen.blit(five_box,(250,250))
-        screen.blit(six_box,(250,200))
-        screen.blit(seven_box,(250,150))
-        screen.blit(eight_box,(250,100))
-        screen.blit(nine_box,(250,50))
-        screen.blit(ten_box,(250,0))
+        screen.blit(entrance_box,(300,600))
+        screen.blit(lunch_box,(300,560))
+        screen.blit(holidays_box,(300,520))
+        screen.blit(restuarants_box,(300,480))
+        screen.blit(four_box,(300,440))
+        screen.blit(five_box,(300,400))
+        screen.blit(six_box,(300,360))
+        screen.blit(seven_box,(300,320))
+        screen.blit(eight_box,(300,280))
+        screen.blit(nine_box,(300,240))
+        screen.blit(ten_box,(300,200))
+        screen.blit(eleven_box,(300,160))
+        screen.blit(twelve_box,(300,120))
+        screen.blit(thirteen_box,(300,80))
+        screen.blit(fourteen_box,(300,40))
+        screen.blit(fifteen_box,(300,0))
         
         if is_blue: color = (0, 128, 255)
         else: color = (255, 100, 0)
-        pygame.draw.rect(screen, color, pygame.Rect(x, y, 20, 20))
+        pygame.draw.rect(screen, color, pygame.Rect(x, y, 10, 10))
         
         pygame.display.flip()
         clock.tick(60)

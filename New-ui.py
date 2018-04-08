@@ -49,12 +49,12 @@ def create_window():
 
     
 
-section1 = Frame(root,width=600, height=600)
+section1 = Frame(root,width=600, height=1000)
 section1.pack(side=LEFT)
-mape= Frame(section1,bg="white",width=500, height=500)
+mape= Frame(section1,bg="white",width=600, height=1000)
 mape.grid(row=0,column=10)
 
-section2 = Frame(root,width=400, height=400)
+section2 = Frame(root,width=400, height=1000)
 section2.pack(side=RIGHT)
 
 frame1 = Frame(section2)

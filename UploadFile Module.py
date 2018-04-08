@@ -34,12 +34,13 @@ def UploadExhibit4():
 root.geometry("1000x1000")
 
 icon = PhotoImage(file="C:\\Users\\Vasu Jain\\AppData\\Local\\Programs\\Python\\Python35-32\\icon1.png")
+icon1 = PhotoImage(file="C:\\Users\\Vasu Jain\\AppData\\Local\\Programs\\Python\\Python35-32\\foodboc.png")
 
 root1 = Frame(root)
 root1.pack()
 frame1 = Frame(root1)
-frame1.grid(row=0,column=10)
-button1 = Button(frame1,text="Exhibit 1",image=icon,command=UploadExhibit1)
+frame1.grid(row=0)
+button1 = Button(frame1,text="Exhibit 1",image=icon1,command=UploadExhibit1)
 button1.pack()
 name1 = Label(frame1,text="Exhibit 1")
 name1.pack()
