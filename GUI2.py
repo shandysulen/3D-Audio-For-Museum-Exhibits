@@ -1,13 +1,9 @@
 from tkinter import *
 import socket
 import sys
-
-
-
-
-
-
-
+import random
+import pyaudio
+import hrtf
 
 
 
@@ -190,23 +186,45 @@ def UploadExhibit15():
 
 
 #Server Code
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server_address = ('localhost', 10000)
-print(sys.stderr, 'starting up on %s port %s' % server_address)
-foo.insert(END,"Starting Server on port 1000"+  "\n")
-sock.bind(server_address)
+localIP     = "127.0.0.1"
+localPort   = 20001
+bufferSize  = 1024
 
 
-#Running Server Waiting for client to connect and communicate
+# Create a datagram socket
+UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+foo.insert(END,"Socket successfully created"+"\n")
+# Bind to address and ip
+UDPServerSocket.bind(('', localPort))
+foo.insert(END,"socket binded to %s" %(localPort)+"\n")
+eIndex = 8
+aIndex = 0
+sendThis = hrtf.hrtf('RiverStreamAdjusted.wav', aIndex, eIndex)
+data = sendThis.tobytes()
+foo.insert(END,"UDP server up and listening"+"\n")
 
-#while True:
-	#payload, client_address = sock.recvfrom(1)
-	#print("Echoing data back to " + str(client_address))
-	#sent = sock.sendto(payload, client_address)
+'''
+bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
+message = bytesAddressPair[0]
+address = bytesAddressPair[1]
+clientMsg = "Message from Client:{}".format(message)
+clientIP  = "Client IP Address:{}".format(address)
+foo.insert(END,clientMsg+"\n")
+foo.insert(END,clientIP+"\n")
+
+UDPServerSocket.sendto(data, address)
+UDPServerSocket.close()
+'''
 
 
 
-## Server code end here
+
+      
+
+
+
+
+
 
 
 
