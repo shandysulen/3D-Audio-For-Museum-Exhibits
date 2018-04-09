@@ -2,11 +2,11 @@ import hrtf
 import socket
 import time
 
-HOST = '127.0.0.1'                 # Symbolic name meaning all available interfaces
+HOST = ''                 # Symbolic name meaning all available interfaces
 PORT = 50007              # Arbitrary non-privileged port
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
-s.listen(1)
+s.listen(5)
 print("Server listening on port 50007...")
 conn, addr = s.accept()
 print('New connection:', addr)

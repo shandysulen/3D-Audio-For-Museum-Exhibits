@@ -9,7 +9,7 @@ CHANNELS = 2
 RATE = 44100
 frames = []
 
-HOST = '127.0.0.1'                 # Symbolic name meaning all available interfaces
+HOST = ''                 # Symbolic name meaning all available interfaces
 PORT = 50007              # Arbitrary non-privileged port
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((HOST, PORT))
