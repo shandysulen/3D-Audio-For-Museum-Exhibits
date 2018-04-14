@@ -6,32 +6,28 @@ done = False
 white = (255, 255, 255)
 screen.fill(white)
 
-
-
-compass = pygame.image.load("compass.png")
-lunch = pygame.image.load("1.png")
-holidays=pygame.image.load("2.png")
-restauranrts=pygame.image.load("3.png")
-four=pygame.image.load("4.png")
-five=pygame.image.load("5.png")
-six=pygame.image.load("6.png")
-seven=pygame.image.load("7.png")
-eight=pygame.image.load("8.png")
-nine=pygame.image.load("9.png")
-ten=pygame.image.load("10.png")
-eleven = pygame.image.load("11.png")
-twelve=pygame.image.load("12.png")
-thirteen=pygame.image.load("13.png")
-fourteen=pygame.image.load("14.png")
-fifteen=pygame.image.load("15.png")
-entrance = pygame.image.load("entrance.png")
-
-
+compass = pygame.image.load("images/compass.png")
+lunch = pygame.image.load("images/1.png")
+holidays=pygame.image.load("images/2.png")
+restaurants=pygame.image.load("images/3.png")
+four=pygame.image.load("images/4.png")
+five=pygame.image.load("images/5.png")
+six=pygame.image.load("images/6.png")
+seven=pygame.image.load("images/7.png")
+eight=pygame.image.load("images/8.png")
+nine=pygame.image.load("images/9.png")
+ten=pygame.image.load("images/10.png")
+eleven = pygame.image.load("images/11.png")
+twelve=pygame.image.load("images/12.png")
+thirteen=pygame.image.load("images/13.png")
+fourteen=pygame.image.load("images/14.png")
+fifteen=pygame.image.load("images/15.png")
+entrance = pygame.image.load("images/entrance.png")
 
 pic = pygame.transform.scale(compass, (80, 80))
 lunch_box=pygame.transform.scale(lunch,(20,20))
 holidays_box=pygame.transform.scale(holidays,(20,20))
-restuarants_box=pygame.transform.scale(restauranrts,(20,20))
+restuarants_box=pygame.transform.scale(restaurants,(20,20))
 four_box=pygame.transform.scale(four,(20,20))
 five_box=pygame.transform.scale(five,(20,20))
 six_box=pygame.transform.scale(six,(20,20))
@@ -58,13 +54,13 @@ while not done:
                         done = True
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                         is_blue = not is_blue
-        
+
         pressed = pygame.key.get_pressed()
         if pressed[pygame.K_UP]: y -= 1
         if pressed[pygame.K_DOWN]: y += 1
         if pressed[pygame.K_LEFT]: x -= 1
         if pressed[pygame.K_RIGHT]: x += 1
-        
+
         screen.fill((255, 255, 255))
         pygame.draw.line(screen, (0, 0, 0), (0, 300), (800, 300))
         pygame.draw.line(screen, (0, 0, 0), (300, 0), (300, 800))
@@ -85,10 +81,10 @@ while not done:
         screen.blit(thirteen_box,(300,80))
         screen.blit(fourteen_box,(300,40))
         screen.blit(fifteen_box,(300,0))
-        
+
         if is_blue: color = (0, 128, 255)
         else: color = (255, 100, 0)
         pygame.draw.rect(screen, color, pygame.Rect(x, y, 10, 10))
-        
+
         pygame.display.flip()
         clock.tick(60)
