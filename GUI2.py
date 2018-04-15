@@ -18,11 +18,19 @@ INDEX_COL = 1
 EXHIBIT_COL = 2
 BROWSE_BTN_COL = 3
 FILE_COL = 4
-ZERO = 0
 
-class AudioButton(Button):
+class Log(Frame):
     def __init__(self, master=None):
         super().__init__(master)
+
+        self.log = Text(self,height=20,width=40)
+        self.log.pack(fill=Y)
+        self.log.configure(state="disabled")
+
+    def insertToLog(self, text):
+        self.log.configure(state="normal")
+        self.log.insert(END, text + "\n")
+        self.log.configure(state="disabled")
 
 class ExhibitTable(Frame):
     def __init__(self, master=None):
@@ -78,21 +86,13 @@ class ExhibitTable(Frame):
         style.configure('StopButton.TButton', foreground='red')
 
         # Main Functionality
-        self.run_btn = Button(self,text="RUN", style='PlayButton.TButton')
-        self.run_btn.grid(row=19,column=1,pady=(20, 0))
-        self.run_btn.configure(state="disabled")
+        self.start_btn = Button(self,text="RUN", style='PlayButton.TButton')
+        self.start_btn.grid(row=19,column=1,pady=(20, 0))
+        self.start_btn.configure(state="disabled")
 
         self.stop_btn = Button(self,text="STOP", style='StopButton.TButton')
         self.stop_btn.grid(row=19,column=2,pady=(20, 0))
         self.stop_btn.configure(state="disabled")
-
-        self.clear_btn = Button(self,text="CLEAR")
-        self.clear_btn.grid(row=19,column=3,pady=(20, 0))
-        self.clear_btn.configure(state="disabled")
-
-        self.clearall_btn = Button(self,text="CLEAR ALL")
-        self.clearall_btn.grid(sticky="W", row=19,column=4,pady=(20, 0))
-        self.clearall_btn.configure(state="disabled")
 
     def uploadAudioFile(self, file_num):
         chosen_file = filedialog.askopenfilename(filetypes = (("Sound Files",".wav"),("All Files","*.*") ))
@@ -103,23 +103,49 @@ class ExhibitTable(Frame):
 
         # Switch state on according checkbox
         self.enableDict[file_num].config(state="normal")
-        self.enableDict[file_num].state(['selected'])        
+        self.enableDict[file_num].state(['selected'])
 
         # Since the user has uploaded at least one file, give them the ability to run the program
-        self.run_btn.configure(state="enabled")
+        self.start_btn.configure(state="enabled")
 
-class Log(Frame):
+class Application(Frame):
     def __init__(self, master=None):
         super().__init__(master)
 
-        self.log = Text(self,height=20,width=40)
-        self.log.pack(fill=Y)
-        self.log.configure(state="disabled")
+        # Create exhibit table
+        self.exhibit_table = ExhibitTable(self)
+        self.exhibit_table.pack(side=LEFT, padx=20, pady=20)
 
-    def insertToLog(self, text):
-        self.log.configure(state="normal")
-        self.log.insert(END, text + "\n")
-        self.log.configure(state="disabled")
+        # Create log
+        self.log = Log(self)
+        self.log.pack(side=LEFT, padx=20, pady=20)
+
+        # Hook up the run function to the run button
+        self.exhibit_table.start_btn.config(command=lambda: self.start())
+        self.exhibit_table.stop_btn.config(command=lambda: self.stop())
+
+    def start(self):
+
+        # Successfully write to log
+        self.log.insertToLog("Localization Machine Booted...")
+
+        # Enable/disable buttons
+        self.exhibit_table.stop_btn.configure(state="enabled")
+        self.exhibit_table.start_btn.configure(state="disabled")
+
+        # Play 3D audio
+        for i in range(1, NUM_EXHIBITS):
+            if self.exhibit_table.enableDict[i].state()[0] == 'selected':
+                print('HRTF')
+
+    def stop(self):
+
+        self.log.insertToLog("Shutting down Localization Machine...")
+
+        # Enable/disable buttons
+        self.exhibit_table.stop_btn.configure(state="disabled")
+        self.exhibit_table.start_btn.configure(state="enabled")
+
 
 if __name__ == '__main__':
 
@@ -128,16 +154,9 @@ if __name__ == '__main__':
     root.title("3D Audio for Museum Exhibits")
     root.iconbitmap('images\logo.ico')
 
-    # Create exhibit table
-    exhibit_table = ExhibitTable(root)
-    exhibit_table.pack(side=LEFT, padx=20, pady=20)
-
-    # Create log
-    log = Log(root)
-    log.pack(side=LEFT, padx=20)
-
-    # Successfully write to log
-    log.insertToLog("Localization Machine Booted...")
+    # Create app
+    app = Application(root)
+    app.pack()
 
     # Run app forever
     root.mainloop()
