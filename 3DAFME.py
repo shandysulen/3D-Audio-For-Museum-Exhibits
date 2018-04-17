@@ -7,7 +7,9 @@ import random
 import pyaudio
 import hrtf
 import time
+from datetime import datetime
 from scipy.spatial import distance
+from multiprocessing.pool import ThreadPool
 import os
 
 # Globals
@@ -30,13 +32,13 @@ class Log(Frame):
     def __init__(self, master=None):
         super().__init__(master)
 
-        self.log = Text(self,height=20,width=40)
+        self.log = Text(self,height=20,width=60)
         self.log.pack(fill=Y)
         self.log.configure(state="disabled")
 
     def insertToLog(self, text):
         self.log.configure(state="normal")
-        self.log.insert(END, text + "\n")
+        self.log.insert(END,"[" + str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")) + "] " + text + "\n")
         self.log.configure(state="disabled")
 
 class ExhibitTable(Frame):
@@ -143,36 +145,40 @@ class Application(Frame):
         self.exhibit_table.stop_btn.configure(state="enabled")
         self.exhibit_table.start_btn.configure(state="disabled")
 
-        soundToPlay = []
-
         # Show the user's location in real-time
         os.system('python canvas.py')
 
+        soundToPlay = []
+
         # Play 3D audio
-        while True:
-
-            # GET USER LOCATION FROM SENSOR
-
-            # TEMPORARY VALUE
-            user_loc = (3,10)
-
-            for i in range(1, NUM_EXHIBITS):
-                if self.exhibit_table.enableDict[i].state()[0] == 'selected':
-
-                    # scale the sound's volume according to distance from exhibit
-                    dist_from_exhibit = distance.euclidean(user_loc, EXHIBIT_COORD[i-1])
-
-                    # Threshold for each exhibit distance
-                    if dist_from_exhibit < 5.0:
-
-                        # GET AINDEX AND EINDEX based off user's orientation in regards to those exhibits
-
-                        # TEMPORARY VALUES
-                        aIndex = 0 # To the left
-                        eIndex = 8 # About eye level
-                        sound = hrtf.hrtf(fileDict[i], aIndex, eIndex)
-
-                        # scale the sound's volume using dist_form exhibit
+        # while True:
+        #
+        #     # GET USER LOCATION FROM SENSOR
+        #
+        #     # TEMPORARY VALUE
+        #     user_loc = (3,10)
+        #
+        #     for i in range(1, NUM_EXHIBITS):
+        #         if self.exhibit_table.enableDict[i].state()[0] == 'selected':
+        #
+        #             # scale the sound's volume according to distance from exhibit
+        #             dist_from_exhibit = distance.euclidean(user_loc, EXHIBIT_COORD[i-1])
+        #
+        #             # Threshold for each exhibit distance
+        #             if dist_from_exhibit < 5.0:
+        #
+        #                 # GET AINDEX AND EINDEX based off user's orientation in regards to those exhibits
+        #
+        #                 # TEMPORARY VALUES
+        #                 aIndex = 0 # To the left
+        #                 eIndex = 8 # About eye level
+        #                 sound = hrtf.hrtf(fileDict[i], aIndex, eIndex)
+        #
+        #                 # scale the sound's volume using dist_form exhibit
+        #                 scale = 1 - 0.2 * dist_from_exhibit
+        #                 sound *= scale
+        #
+        #                 soundToPlay = sound
 
 
     def stop(self):
@@ -181,7 +187,7 @@ class Application(Frame):
         self.stop_time = time.time()
 
         self.log.insertToLog("Shutting down Localization Machine...")
-        self.log.insertToLog("Session Time: " + str(self.stop_time - self.start_time) + " seconds")
+        self.log.insertToLog("Session Time: " + str(round(self.stop_time - self.start_time, 2)) + " seconds")
 
         # Enable/disable buttons
         self.exhibit_table.stop_btn.configure(state="disabled")
