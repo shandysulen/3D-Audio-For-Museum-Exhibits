@@ -64,60 +64,52 @@ import struct
 import collections
 import time
 from threading import Thread
+import math
 
-class MarvelmindHedge(Thread):
-    def __init__(self, adr=None, tty="/dev/ttyACM0", baud=9600, maxvaluescount=3, debug=False,
-                 recieveUltrasoundPositionCallback=None, recieveImuRawDataCallback=None, recieveImuDataCallback=None,
-                 recieveUltrasoundRawDataCallback=None):
+# import numpy as np
+# import marvelmindQuaternion as mq
+
+class MarvelmindHedge (Thread):
+    def __init__ (self, adr, tty="/dev/ttyACM0", baud=9600, maxvaluescount=3, debug=False, recieveUltrasoundPositionCallback=None, recieveImuRawDataCallback=None, recieveImuDataCallback=None, recieveUltrasoundRawDataCallback=None):
         self.tty = tty  # serial
         self.baud = baud  # baudrate
         self.debug = debug  # debug flag
         self._bufferSerialDeque = collections.deque(maxlen=255)  # serial buffer
 
-        self.valuesUltrasoundPosition = collections.deque([[0] * 5] * maxvaluescount,
-                                                          maxlen=maxvaluescount)  # ultrasound position buffer
+        self.valuesUltrasoundPosition = collections.deque([[0]*5]*maxvaluescount, maxlen=maxvaluescount) # ultrasound position buffer
         self.recieveUltrasoundPositionCallback = recieveUltrasoundPositionCallback
-
-        self.valuesImuRawData = collections.deque([[0] * 10] * maxvaluescount,
-                                                  maxlen=maxvaluescount)  # raw imu data buffer
+        
+        self.valuesImuRawData = collections.deque([[0]*10]*maxvaluescount, maxlen=maxvaluescount) # raw imu data buffer
         self.recieveImuRawDataCallback = recieveImuRawDataCallback
 
-        self.valuesImuData = collections.deque([[0] * 14] * maxvaluescount,
-                                               maxlen=maxvaluescount)  # processed imu data buffer
+        self.valuesImuData = collections.deque([[0]*14]*maxvaluescount, maxlen=maxvaluescount) # processed imu data buffer
         self.recieveImuDataCallback = recieveImuDataCallback
 
-        self.valuesUltrasoundRawData = collections.deque([[0] * 5] * maxvaluescount, maxlen=maxvaluescount)
+        self.valuesUltrasoundRawData = collections.deque([[0]*5]*maxvaluescount, maxlen=maxvaluescount)
         self.recieveUltrasoundRawDataCallback = recieveUltrasoundRawDataCallback
+
 
         self.pause = False
         self.terminationRequired = False
-
+        
         self.adr = adr
         self.serialPort = None
         Thread.__init__(self)
 
     def print_position(self):
         if (isinstance(self.position()[1], int)):
-            print("Hedge {:d}: X: {:d} m, Y: {:d} m, Z: {:d} m at time T: {:.2f}".format(self.position()[0],
-                                                                                         self.position()[1],
-                                                                                         self.position()[2],
-                                                                                         self.position()[3],
-                                                                                         self.position()[4] / 1000.0))
+            print ("Hedge {:d}: X: {:d} m, Y: {:d} m, Z: {:d} m at time T: {:.2f}".format(self.position()[0], self.position()[1], self.position()[2], self.position()[3], self.position()[4]/1000.0))
         else:
-            print("Hedge {:d}: X: {:.2f}, Y: {:.2f}, Z: {:.2f} at time T: {:.2f}".format(self.position()[0],
-                                                                                         self.position()[1],
-                                                                                         self.position()[2],
-                                                                                         self.position()[3],
-                                                                                         self.position()[4] / 1000.0))
+            print ("Hedge {:d}: X: {:.2f}, Y: {:.2f}, Z: {:.2f} at time T: {:.2f}".format(self.position()[0], self.position()[1], self.position()[2], self.position()[3], self.position()[4]/1000.0))
 
     def position(self):
         return list(self.valuesUltrasoundPosition)[-1];
-
+    
     def stop(self):
         self.terminationRequired = True
-        print("stopping")
+        print ("stopping")
 
-    def run(self):
+    def run(self):      
         while (not self.terminationRequired):
             if (not self.pause):
                 try:
@@ -128,12 +120,12 @@ class MarvelmindHedge(Thread):
                         self._bufferSerialDeque.append(readChar)
                         readChar = self.serialPort.read(1)
                         bufferList = list(self._bufferSerialDeque)
-
+                        
                         strbuf = (b''.join(bufferList))
 
                         pktHdrOffset = strbuf.find(b'\xff\x47')
-                        if (pktHdrOffset >= 0 and len(bufferList) > pktHdrOffset + 4 and pktHdrOffset < 220):
-                            #                           print(bufferList)
+                        if (pktHdrOffset >= 0 and len(bufferList) > pktHdrOffset + 4 and pktHdrOffset<220):
+#                           print(bufferList)
                             isMmMessageDetected = False
                             isCmMessageDetected = False
                             isRawImuMessageDetected = False
@@ -145,48 +137,44 @@ class MarvelmindHedge(Thread):
                             pktHdrOffsetDistances = strbuf.find(b'\xff\x47\x04\x00')
                             pktHdrOffsetImu = strbuf.find(b'\xff\x47\x05\x00')
 
-                            if (pktHdrOffsetMm != -1):
+                            if (pktHdrOffsetMm!=-1):
                                 isMmMessageDetected = True
-                                if (self.debug): print('Message with US-position(mm) was detected')
-                            elif (pktHdrOffsetCm != -1):
+                                if (self.debug): print ('Message with US-position(mm) was detected')
+                            elif (pktHdrOffsetCm!=-1):
                                 isCmMessageDetected = True
-                                if (self.debug): print('Message with US-position(cm) was detected')
-                            elif (pktHdrOffsetRawImu != -1):
+                                if (self.debug): print ('Message with US-position(cm) was detected')
+                            elif (pktHdrOffsetRawImu!=-1):
                                 isRawImuMessageDetected = True
-                                if (self.debug): print('Message with raw IMU data was detected')
-                            elif (pktHdrOffsetDistances != -1):
+                                if (self.debug): print ('Message with raw IMU data was detected')
+                            elif (pktHdrOffsetDistances!=-1):
                                 isDistancesMessageDetected = True
-                                if (self.debug): print('Message with distances was detected')
-                            elif (pktHdrOffsetImu != -1):
+                                if (self.debug): print ('Message with distances was detected')
+                            elif (pktHdrOffsetImu!=-1):
                                 isImuMessageDetected = True
-                                if (self.debug): print('Message with processed IMU data was detected')
+                                if (self.debug): print ('Message with processed IMU data was detected')
                             msgLen = ord(bufferList[pktHdrOffset + 4])
-                            if (self.debug): print('Message length: ', msgLen)
+                            if (self.debug): print ('Message length: ', msgLen)
 
                             try:
                                 if (len(bufferList) > pktHdrOffset + 4 + msgLen + 2):
                                     usnCRC16 = 0
                                     if (isCmMessageDetected):
-                                        usnTimestamp, usnX, usnY, usnZ, usnAdr, usnCRC16 = struct.unpack_from(
-                                            '<LhhhxBxxxxH', strbuf, pktHdrOffset + 5)
-                                        usnX = usnX / 100.0
-                                        usnY = usnY / 100.0
-                                        usnZ = usnZ / 100.0
+                                        usnTimestamp, usnX, usnY, usnZ, usnAdr, usnCRC16 = struct.unpack_from ('<LhhhxBxxxxH', strbuf, pktHdrOffset + 5)
+                                        usnX = usnX/100.0
+                                        usnY = usnY/100.0
+                                        usnZ = usnZ/100.0
                                     elif (isMmMessageDetected):
-                                        usnTimestamp, usnX, usnY, usnZ, usnAdr, usnCRC16 = struct.unpack_from(
-                                            '<LlllxBxxxxH', strbuf, pktHdrOffset + 5)
-                                        usnX = usnX / 1000.0
-                                        usnY = usnY / 1000.0
-                                        usnZ = usnZ / 1000.0
+                                        usnTimestamp, usnX, usnY, usnZ, usnAdr, usnCRC16 = struct.unpack_from ('<LlllxBxxxxH', strbuf, pktHdrOffset + 5)
+                                        usnX = usnX/1000.0
+                                        usnY = usnY/1000.0
+                                        usnZ = usnZ/1000.0
                                     elif (isRawImuMessageDetected):
-                                        ax, ay, az, gx, gy, gz, mx, my, mz, timestamp, usnCRC16 = struct.unpack_from(
-                                            '<hhhhhhhhhxxxxxxLxxxxH', strbuf, pktHdrOffset + 5)
+                                        ax, ay, az, gx, gy, gz, mx, my, mz, timestamp, usnCRC16 = struct.unpack_from ('<hhhhhhhhhxxxxxxLxxxxH', strbuf, pktHdrOffset + 5)
                                     elif (isImuMessageDetected):
-                                        x, y, z, qw, qx, qy, qz, vx, vy, vz, ax, ay, az, timestamp, usnCRC16 = struct.unpack_from(
-                                            '<lllhhhhhhhhhhxxLxxxxH', strbuf, pktHdrOffset + 5)
+                                        x, y, z, qw, qx, qy, qz, vx, vy, vz, ax, ay, az, timestamp, usnCRC16 = struct.unpack_from ('<lllhhhhhhhhhhxxLxxxxH', strbuf, pktHdrOffset + 5)
 
                                     crc16 = crcmod.predefined.Crc('modbus')
-                                    crc16.update(strbuf[pktHdrOffset: pktHdrOffset + msgLen + 5])
+                                    crc16.update(strbuf[ pktHdrOffset : pktHdrOffset + msgLen + 5 ])
                                     CRC_calc = int(crc16.hexdigest(), 16)
 
                                     if CRC_calc == usnCRC16:
@@ -206,40 +194,36 @@ class MarvelmindHedge(Thread):
                                         #     if (self.recieveUltrasoundRawDataCallback is not None):
                                         #         self.recieveUltrasoundRawDataCallback()
                                         elif (isImuMessageDetected):
-                                            value = [x / 1000.0, y / 1000.0, z / 1000.0, qw / 10000.0, qx / 10000.0,
-                                                     qy / 10000.0, qz / 10000.0, vx / 1000.0, vy / 1000.0, vz / 1000.0,
-                                                     ax / 1000.0, ay / 1000.0, az / 1000.0, timestamp]
+                                            value = [x/1000.0, y/1000.0, z/1000.0, qw/10000.0, qx/10000.0, qy/10000.0, qz/10000.0, vx/1000.0, vy/1000.0, vz/1000.0, ax/1000.0,ay/1000.0,az/1000.0, timestamp]
                                             self.valuesImuData.append(value)
                                             if (self.recieveImuDataCallback is not None):
                                                 self.recieveImuDataCallback()
                                     else:
                                         if self.debug:
-                                            print('\n*** CRC ERROR')
+                                            print ('\n*** CRC ERROR')
 
                                     if pktHdrOffset == -1:
                                         if self.debug:
-                                            print(
-                                                '\n*** ERROR: Marvelmind USNAV beacon packet header not found (check modem board or radio link)')
+                                            print ('\n*** ERROR: Marvelmind USNAV beacon packet header not found (check modem board or radio link)')
                                         continue
                                     elif pktHdrOffset >= 0:
                                         if self.debug:
-                                            print('\n>> Found USNAV beacon packet header at offset %d' % pktHdrOffset)
+                                            print ('\n>> Found USNAV beacon packet header at offset %d' % pktHdrOffset)
                                     for x in range(0, pktHdrOffset + msgLen + 7):
                                         self._bufferSerialDeque.popleft()
                             except struct.error:
-                                print('smth wrong')
+                                print ('smth wrong')
                 except OSError:
                     if self.debug:
-                        print('\n*** ERROR: OS error (possibly serial port is not available)')
+                        print ('\n*** ERROR: OS error (possibly serial port is not available)')
                     time.sleep(1)
                 except serial.SerialException:
                     if self.debug:
-                        print(
-                            '\n*** ERROR: serial port error (possibly beacon is reset, powered down or in sleep mode). Restarting reading process...')
+                        print ('\n*** ERROR: serial port error (possibly beacon is reset, powered down or in sleep mode). Restarting reading process...')
                     self.serialPort = None
                     time.sleep(1)
-            else:
+            else: 
                 time.sleep(1)
-
+    
         if (self.serialPort is not None):
             self.serialPort.close()
