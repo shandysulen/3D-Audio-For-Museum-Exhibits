@@ -1,12 +1,11 @@
-import scipy.io as scp
-import numpy as np
-import sounddevice as sd
-import soundfile as sf
+import scipy.io as scp # used to load .mat file
+import numpy as np # used for multi-dimensional array
+import soundfile as sf # used to save .wav file
 import sys
 
 def hrtf(fileName, aIndex, eIndex):
     """
-    This function will playback fileName as 3D audio by computing
+    This function will save a 3D audio version of the fileName by computing
     the head-related transfer function based off the passed-in azimuth
     and elevation indices
 
@@ -29,15 +28,9 @@ def hrtf(fileName, aIndex, eIndex):
         print("Error: Audio file cannot be played, or it doesn't exist.")
         sys.exit(0)
 
-    # 25 azimuth locations according to CIPIC
-    azimuths = [-80, -65, -55, -45, -40,
-                -35, -30, -25, -20, -15,
-                -10, -5, 0, 5, 10,
-                15, 20, 25, 30, 35,
-                40, 45, 55, 65, 80]
-
-    # 50 elevation locations according to CIPIC
-    elevations = np.arange(-45, 230.625, 5.625)
+    # Convert stereo audio file to mono by grabbing the left channel only
+    if len(data.shape) == 2:
+        data = data[:][0]
 
     # Extract hrir's from the HRTF database
     hrir_l = hrtf_db['hrir_l']
@@ -51,16 +44,13 @@ def hrtf(fileName, aIndex, eIndex):
     delay = hrtf_db['ITD'][aIndex - 1][eIndex - 1]
     zeros_delay = [0] * abs(int(delay))
 
-    #Include the delay in left and right stereo channels
+    # Include the delay in left and right stereo channels
     if aIndex < 13:
         lft = lft + zeros_delay
         rgt = zeros_delay + rgt
     else:
         lft = zeros_delay + lft
         rgt = rgt + zeros_delay
-
-    print("data type:", type(data))
-    print("shape of data:", data.shape)
 
     # Perform convolution
     left_convolved = list(np.convolve(data, lft))
@@ -72,12 +62,26 @@ def hrtf(fileName, aIndex, eIndex):
     wav_right = right_convolved + zeros_samplerate
 
     # Create np array soundToPlay with wav_left and wav_right
-    soundToPlay = np.array([wav_left, wav_right])
+    soundToPlay = np.array([wav_left, wav_right], dtype='float32')
 
-    # Play 3D audio!
-    try:
-        sd.play(soundToPlay.T, fs)
-        sd.wait()
-    except:
-        print("Error with 3D audio playback.")
-        sys.exit(0)
+    # Find max between left and right stereo channels
+    maxlft = max(soundToPlay[0])
+    maxrgt = max(soundToPlay[1])
+    if (maxlft > maxrgt):
+        maximum = maxlft
+    else:
+        maximum = maxrgt
+
+    # Scale the wave to -1 and 1
+    soundToPlay = soundToPlay / float(maximum)
+
+    # Transpose multi-dimensional array into the proper shape
+    soundToPlay = soundToPlay.T
+
+    # Save 3D audio file for playback
+    # sf.write('hrtf.wav', soundToPlay, fs)
+    return soundToPlay
+
+# start with 5 ft as the cutoff for the sounds
+# to get multiple sounds, just add the left channels with one another and
+# add the right channels with one another and output that

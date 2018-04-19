@@ -1,6 +1,8 @@
 import pygame
+pygame.init()
+pygame.display.set_caption('3D Audio for Museum Exhibits - User Location')
 
-#pygame.init()
+
 screen = pygame.display.set_mode((620, 620))
 done = False
 white = (255, 255, 255)
