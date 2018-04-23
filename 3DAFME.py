@@ -10,7 +10,10 @@ import time
 from datetime import datetime
 from scipy.spatial import distance
 from multiprocessing.pool import ThreadPool
+import threading
 import os
+import UDPClient
+import math
 
 # Globals
 NUM_EXHIBITS = 16
@@ -27,6 +30,13 @@ INDEX_COL = 1
 EXHIBIT_COL = 2
 BROWSE_BTN_COL = 3
 FILE_COL = 4
+
+def getDistFromOrigin(x, y):
+    return math.sqrt(math.pow(x,2) + math.pow(y,2))
+
+def printHelloWorld():
+    print("Hello World")
+    return
 
 class Log(Frame):
     def __init__(self, master=None):
@@ -138,50 +148,73 @@ class Application(Frame):
         # Get start time
         self.start_time = time.time()
 
-        # Successfully write to log
-        self.log.insertToLog("Localization Machine Booted...")
-
         # Enable/disable buttons
         self.exhibit_table.stop_btn.configure(state="enabled")
         self.exhibit_table.start_btn.configure(state="disabled")
 
+        # Successfully write to log
+        self.log.insertToLog("Localization Machine Booted...")
+
         # Show the user's location in real-time
         os.system('python canvas.py')
 
+        # Connect to Dashboard
+        self.log.insertToLog("Establishing connection with Dashboard...")
+        host = '127.0.0.1'
+        port = 10000
+        beacon_add = 23
+        self.udp = UDPClient.udp_factory(host, port, beacon_add)
+        self.log.insertToLog("Connection successfully established with Dashboard...")
+
         soundToPlay = []
+        interval = 0.1
+        pool = ThreadPool(processes=1)
 
         # Play 3D audio
-        # while True:
-        #
-        #     # GET USER LOCATION FROM SENSOR
-        #
-        #     # TEMPORARY VALUE
-        #     user_loc = (3,10)
-        #
-        #     for i in range(1, NUM_EXHIBITS):
-        #         if self.exhibit_table.enableDict[i].state()[0] == 'selected':
-        #
-        #             # scale the sound's volume according to distance from exhibit
-        #             dist_from_exhibit = distance.euclidean(user_loc, EXHIBIT_COORD[i-1])
-        #
-        #             # Threshold for each exhibit distance
-        #             if dist_from_exhibit < 5.0:
-        #
-        #                 # GET AINDEX AND EINDEX based off user's orientation in regards to those exhibits
-        #
-        #                 # TEMPORARY VALUES
-        #                 aIndex = 0 # To the left
-        #                 eIndex = 8 # About eye level
-        #                 sound = hrtf.hrtf(fileDict[i], aIndex, eIndex)
-        #
-        #                 # scale the sound's volume using dist_form exhibit
-        #                 scale = 1 - 0.2 * dist_from_exhibit
-        #                 sound *= scale
-        #
-        #                 soundToPlay = sound
+        while True:
 
+            # GET USER LOCATION FROM SENSOR
+            try:
+                async_result = pool.apply_async(self.udp.request_position)
+                time.sleep(interval)
+                user_loc = async_result.get()
+            except OSError as e:
+                print(e)
+
+            # scale the sound's volume according to distance from exhibit
+            # origin_dist = getDistFromOrigin(user_loc[0], user_loc[1])
+            # print(origin_dist)
+
+            # TEMPORARY VALUE
+
+            # for i in range(1, NUM_EXHIBITS):
+            #     if self.exhibit_table.enableDict[i].state()[0] == 'selected':
+            #
+            #         # scale the sound's volume according to distance from exhibit
+            #         dist_from_exhibit = distance.euclidean(user_loc, EXHIBIT_COORD[i-1])
+            #
+            #         # Threshold for each exhibit distance
+            #         if dist_from_exhibit < 5.0:
+            #
+            #             # GET AINDEX AND EINDEX based off user's orientation in regards to those exhibits
+            #
+            #             # TEMPORARY VALUES
+            #             aIndex = 0 # To the left
+            #             eIndex = 8 # About eye level
+            #             sound = hrtf.hrtf(fileDict[i], aIndex, eIndex)
+            #
+            #             # scale the sound's volume using dist_form exhibit
+            #             scale = 1 - 0.2 * dist_from_exhibit
+            #             sound *= scale
+            #
+            #             soundToPlay = sound
+
+        # Close UDP sockets
+        self.log.insertToLog("Closing connection with Dashboard...")
 
     def stop(self):
+
+        self.udp.close()
 
         # Get stop time
         self.stop_time = time.time()
