@@ -21,22 +21,60 @@ EXHIBIT_NAMES = ["Entrance", "School Lunch", "Holidays", "Restaurants",
                 "Formals", "Events", "Import", "Staples", "Commissary",
                 "Commissary", "Construction", "Trouble", "Meals To Go",
                 "Cultural", "Panama", "Unique"]
-EXHIBIT_COORD = [(0,0), (0,8.375), (0,16.75), (0,25.125),
-                (0,33.5), (0,41.875), (0, 50.25), (0,58.625), (0,67),
-                (0,75.375), (0,83.75), (0,92.125), (0,100.5),
-                (0,108.875), (0,117.25), (0,125.635)]
+EXHIBIT_COORD = [0, 108, 270, 404,
+                564, 728, 890, 1051, 1228,
+                1640, 1812, 1978, 2131,
+                2326, 2500, 2674]
 CHECKBOX_COL = 0
 INDEX_COL = 1
 EXHIBIT_COL = 2
 BROWSE_BTN_COL = 3
 FILE_COL = 4
+stop_event = threading.Event()
 
 def getDistFromOrigin(x, y):
     return math.sqrt(math.pow(x,2) + math.pow(y,2))
 
-def printHelloWorld():
-    print("Hello World")
-    return
+class LocationThread(threading.Thread):
+    def __init__(self, name, counter, app):
+        threading.Thread.__init__(self)
+        self.threadID = counter
+        self.name = name
+        self.counter = counter
+        self.app = app
+
+    def run(self):
+        self.prog_start()
+
+    def prog_start(self):
+
+        # Connect to Dashboard
+        self.app.log.insertToLog("Establishing connection with Dashboard...")
+        host = '127.0.0.1'
+        port = 10000
+        beacon_add = 23
+        self.udp = UDPClient.udp_factory(host, port, beacon_add)
+        self.app.log.insertToLog("Connection successfully established with Dashboard...")
+
+        # Set sleep interval
+        interval = 0.1
+
+        # Get location data from Dashboard modem
+        while True:
+            try:
+                if stop_event.is_set():
+                    break
+                else:
+                    self.udp.request_position()
+                    time.sleep(interval)
+            except OSError as e:
+                print(e)
+
+        print("Done printing location data")
+
+        # Close UDP socket
+        self.udp.close()
+        return
 
 class Log(Frame):
     def __init__(self, master=None):
@@ -144,6 +182,7 @@ class Application(Frame):
         self.exhibit_table.stop_btn.config(command=lambda: self.stop())
 
     def start(self):
+        # Set global variable to be true
 
         # Get start time
         self.start_time = time.time()
@@ -155,66 +194,18 @@ class Application(Frame):
         # Successfully write to log
         self.log.insertToLog("Localization Machine Booted...")
 
-        # Show the user's location in real-time
-        os.system('python canvas.py')
-
-        # Connect to Dashboard
-        self.log.insertToLog("Establishing connection with Dashboard...")
-        host = '127.0.0.1'
-        port = 10000
-        beacon_add = 23
-        self.udp = UDPClient.udp_factory(host, port, beacon_add)
-        self.log.insertToLog("Connection successfully established with Dashboard...")
-
         soundToPlay = []
-        interval = 0.1
-        pool = ThreadPool(processes=1)
 
-        # Play 3D audio
-        while True:
-
-            # GET USER LOCATION FROM SENSOR
-            try:
-                async_result = pool.apply_async(self.udp.request_position)
-                time.sleep(interval)
-                user_loc = async_result.get()
-            except OSError as e:
-                print(e)
-
-            # scale the sound's volume according to distance from exhibit
-            # origin_dist = getDistFromOrigin(user_loc[0], user_loc[1])
-            # print(origin_dist)
-
-            # TEMPORARY VALUE
-
-            # for i in range(1, NUM_EXHIBITS):
-            #     if self.exhibit_table.enableDict[i].state()[0] == 'selected':
-            #
-            #         # scale the sound's volume according to distance from exhibit
-            #         dist_from_exhibit = distance.euclidean(user_loc, EXHIBIT_COORD[i-1])
-            #
-            #         # Threshold for each exhibit distance
-            #         if dist_from_exhibit < 5.0:
-            #
-            #             # GET AINDEX AND EINDEX based off user's orientation in regards to those exhibits
-            #
-            #             # TEMPORARY VALUES
-            #             aIndex = 0 # To the left
-            #             eIndex = 8 # About eye level
-            #             sound = hrtf.hrtf(fileDict[i], aIndex, eIndex)
-            #
-            #             # scale the sound's volume using dist_form exhibit
-            #             scale = 1 - 0.2 * dist_from_exhibit
-            #             sound *= scale
-            #
-            #             soundToPlay = sound
-
-        # Close UDP sockets
-        self.log.insertToLog("Closing connection with Dashboard...")
+        # Start networking thread
+        self.location_thread = LocationThread("location", 1, self)
+        self.location_thread.start()
 
     def stop(self):
 
-        self.udp.close()
+        stop_event.set()
+
+        # Close UDP sockets
+        self.log.insertToLog("Closing connection with Dashboard...")
 
         # Get stop time
         self.stop_time = time.time()
@@ -225,7 +216,6 @@ class Application(Frame):
         # Enable/disable buttons
         self.exhibit_table.stop_btn.configure(state="disabled")
         self.exhibit_table.start_btn.configure(state="enabled")
-
 
 if __name__ == '__main__':
 
