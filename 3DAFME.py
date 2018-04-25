@@ -5,7 +5,7 @@ import socket
 import sys
 import random
 import pyaudio
-import hrtf
+from hrtf import hrtf
 import time
 from datetime import datetime
 from scipy.spatial import distance
@@ -14,6 +14,10 @@ import threading
 import os
 import UDPClient
 import math
+import numpy as np
+from audiostream3D import AudioStream3D
+from queue import Queue
+q = Queue(1)
 
 # Globals
 NUM_EXHIBITS = 16
@@ -30,10 +34,115 @@ INDEX_COL = 1
 EXHIBIT_COL = 2
 BROWSE_BTN_COL = 3
 FILE_COL = 4
+EXHIBIT_Y = 300
 stop_event = threading.Event()
+
+# global user_loc
 
 def getDistFromOrigin(x, y):
     return math.sqrt(math.pow(x,2) + math.pow(y,2))
+
+def getDistFromExhibit(mobilex, mobiley, exhx, exhy):
+    return math.sqrt(math.pow(mobilex - exhx, 2) + math.pow(mobiley - exhy,2))
+
+class StreamThread(threading.Thread):
+    def __init__(self, name, counter, app):
+        threading.Thread.__init__(self)
+        self.threadID = counter
+        self.name = name
+        self.counter = counter
+        self.app = app
+
+        # Stream Config
+        self.CHUNK = 1048576 # 2^16
+        self.FORMAT = pyaudio.paFloat32
+        self.CHANNELS = 2
+        self.FRAMERATE = 44100
+
+        # When no sounds are playing, return the zero array
+        self.zeros_2channel = np.array([[0] * self.CHUNK, [0] * self.CHUNK], dtype='float32').T.tobytes()
+        self.aIndex = 0
+        self.increaseFlag = True
+
+    def run(self):
+        self.prog_start()
+
+    def HRTFUpdate(self):
+        """
+        Updates the audio data based on the new azimuth and elevation of the user in realtime
+        """
+        self.fileName = q.get()
+        print("Entering HRTF - received " + str(self.fileName))
+        if self.fileName == None:
+            print("Returning zeros...")
+            return self.zeros_2channel
+        else:
+
+            # Mess with aIndex
+            if self.aIndex == 24:
+                self.increaseFlag = False
+            elif self.aIndex == 0:
+                self.increaseFlag = True
+
+            if self.increaseFlag:
+                self.aIndex += 1
+            else:
+                self.aIndex -= 1
+
+            # Return soundToPlay audio file
+            soundToPlay = hrtf(q.get(), self.aIndex, 8)
+            print("Playing " + self.fileName + "...")
+            return soundToPlay.tobytes()
+
+    def prog_start(self):
+        try:
+            # Instantiate PyAudio
+            p = pyaudio.PyAudio()
+
+            # Instantiate a threading pool
+            pool = ThreadPool(processes=1)
+
+            # Open stream using callback
+            stream = p.open(format=self.FORMAT, channels=self.CHANNELS, rate=self.FRAMERATE, output=True)
+
+            # Initialize current position in audio data and get first chunk
+            self.currentPos = 0
+
+            data = self.HRTFUpdate()
+            data_chunk = data[self.currentPos:self.currentPos + self.CHUNK]
+
+            while True:
+                if stop_event.is_set():
+                    break
+                # Asynchronously call HRTF thread
+                async_result = pool.apply_async(self.HRTFUpdate)
+
+                # Play sound
+                stream.write(data_chunk)
+
+                # Update position in data
+                self.currentPos += self.CHUNK
+
+                # Retrieve the updated audio data
+                try:
+                    data = async_result.get()
+                    if data == self.zeros_2channel:
+                        self.currentPos = 0
+                except IndexError:
+                    break
+
+                # Get new chunk of audio data to be streamed
+                data_chunk = data[self.currentPos:self.currentPos + self.CHUNK]
+
+            # Stop stream and PyAudio
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
+
+        except Exception as e:
+            print(e)
+
+        return
 
 class LocationThread(threading.Thread):
     def __init__(self, name, counter, app):
@@ -65,12 +174,22 @@ class LocationThread(threading.Thread):
                 if stop_event.is_set():
                     break
                 else:
-                    self.udp.request_position()
-                    time.sleep(interval)
+                    # global user_loc
+                    user_loc = self.udp.request_position()
+                    distance = None
+                    fileName = None
+                    for i in range(NUM_EXHIBITS):
+                        if self.app.exhibit_table.enableDict[i+1].state()[0] == 'selected' and getDistFromExhibit(user_loc[0], user_loc[1], EXHIBIT_COORD[i], 300) < 200:
+                            distance = getDistFromExhibit(user_loc[0], user_loc[1], EXHIBIT_COORD[i], 300)
+                            fileName = self.app.exhibit_table.fileDict[i+1]["text"]
+                            print(self.name, user_loc, distance, EXHIBIT_NAMES[i], fileName)
+                            break
+                    q.put(fileName)
+                    if fileName == None:
+                        print(self.name, user_loc, "not in range of selected exhibit")                    
             except OSError as e:
+                print("Oh no something happened!!")
                 print(e)
-
-        print("Done printing location data")
 
         # Close UDP socket
         self.udp.close()
@@ -182,10 +301,11 @@ class Application(Frame):
         self.exhibit_table.stop_btn.config(command=lambda: self.stop())
 
     def start(self):
-        # Set global variable to be true
-
         # Get start time
         self.start_time = time.time()
+
+        # Clear the stop event for threads
+        stop_event.clear()
 
         # Enable/disable buttons
         self.exhibit_table.stop_btn.configure(state="enabled")
@@ -194,11 +314,12 @@ class Application(Frame):
         # Successfully write to log
         self.log.insertToLog("Localization Machine Booted...")
 
-        soundToPlay = []
-
         # Start networking thread
         self.location_thread = LocationThread("location", 1, self)
         self.location_thread.start()
+
+        self.stream_thread = StreamThread("stream", 1, self)
+        self.stream_thread.start()
 
     def stop(self):
 

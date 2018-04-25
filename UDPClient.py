@@ -27,7 +27,7 @@ class BeaconUDP:
         # print("Source socket binded to port:",49100)
         try:
             self.udp_socket.connect((self.ip, self.port))
-            print("Connection estabished!")
+            print("Connection established!")
         except socket.timeout:
             print('Connection timeout, check IP address and port number of the target server')
         except OSError:
@@ -50,8 +50,7 @@ class BeaconUDP:
         # details of String Format: https://docs.python.org/3.5/library/struct.html
         timestamp, coord_x, coord_y, coord_z, data_crc16 = struct.unpack_from('<LhhhxxxxxxH',
                                                                               data, self._payload_offset)
-        print(coord_x,coord_y,coord_z)
-        return (coord_x,coord_y,coord_z)
+        return (coord_x,coord_y)
 
 def udp_factory(ip, port, beacon_add):
     udp = BeaconUDP(ip, port, beacon_add)
