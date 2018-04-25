@@ -1,6 +1,5 @@
 import scipy.io as scp # used to load .mat file
 import numpy as np # used for multi-dimensional array
-import soundfile as sf # used to save .wav file
 import sys
 
 def hrtf(fileName, aIndex, eIndex):
@@ -78,8 +77,6 @@ def hrtf(fileName, aIndex, eIndex):
     # Transpose multi-dimensional array into the proper shape
     soundToPlay = soundToPlay.T
 
-    # Save 3D audio file for playback
-    # sf.write('hrtf.wav', soundToPlay, fs)
     return soundToPlay
 
 # start with 5 ft as the cutoff for the sounds

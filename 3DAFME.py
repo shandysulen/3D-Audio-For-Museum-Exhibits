@@ -8,7 +8,6 @@ import pyaudio
 from hrtf import hrtf
 import time
 from datetime import datetime
-from scipy.spatial import distance
 from multiprocessing.pool import ThreadPool
 import threading
 import os
@@ -17,7 +16,13 @@ import math
 import numpy as np
 from audiostream3D import AudioStream3D
 from queue import Queue
+
 q = Queue(1)
+'''
+Global queue that holds a maximum of one fileName. The instance of the LocationThread
+puts the fileName to be played next and the instance of the StreamThread gets the fileName from
+the queue
+'''
 
 # Globals
 NUM_EXHIBITS = 16
@@ -186,7 +191,7 @@ class LocationThread(threading.Thread):
                             break
                     q.put(fileName)
                     if fileName == None:
-                        print(self.name, user_loc, "not in range of selected exhibit")                    
+                        print(self.name, user_loc, "not in range of selected exhibit")
             except OSError as e:
                 print("Oh no something happened!!")
                 print(e)
