@@ -14,7 +14,6 @@ import os
 import UDPClient
 import math
 import numpy as np
-from audiostream3D import AudioStream3D
 from queue import Queue
 
 q = Queue(1)
@@ -34,23 +33,31 @@ EXHIBIT_COORD = [0, 108, 270, 404,
                 564, 728, 890, 1051, 1228,
                 1640, 1812, 1978, 2131,
                 2326, 2500, 2674]
+EXHIBIT_Y = 300
+
+# Used for grid in GUI
 CHECKBOX_COL = 0
 INDEX_COL = 1
 EXHIBIT_COL = 2
 BROWSE_BTN_COL = 3
 FILE_COL = 4
-EXHIBIT_Y = 300
+
+# stop_event used for stopping threads
 stop_event = threading.Event()
 
-# global user_loc
-
+# Utility functions
 def getDistFromOrigin(x, y):
     return math.sqrt(math.pow(x,2) + math.pow(y,2))
 
 def getDistFromExhibit(mobilex, mobiley, exhx, exhy):
     return math.sqrt(math.pow(mobilex - exhx, 2) + math.pow(mobiley - exhy,2))
 
+# Stream used for playing audio
 class StreamThread(threading.Thread):
+    '''
+    StreamThread is responsible for looking at the currently set fileName,
+    updating the HRTF, and playing the appropriate audio.
+    '''
     def __init__(self, name, counter, app):
         threading.Thread.__init__(self)
         self.threadID = counter
@@ -59,13 +66,15 @@ class StreamThread(threading.Thread):
         self.app = app
 
         # Stream Config
-        self.CHUNK = 1048576 # 2^16
+        self.CHUNK = 1048576 # 2^20 <-- Tweak this value until its just right
         self.FORMAT = pyaudio.paFloat32
         self.CHANNELS = 2
         self.FRAMERATE = 44100
 
         # When no sounds are playing, return the zero array
         self.zeros_2channel = np.array([[0] * self.CHUNK, [0] * self.CHUNK], dtype='float32').T.tobytes()
+
+        # Used for simulating left to right motion | should delete when gyroscope is working
         self.aIndex = 0
         self.increaseFlag = True
 
@@ -74,7 +83,7 @@ class StreamThread(threading.Thread):
 
     def HRTFUpdate(self):
         """
-        Updates the audio data based on the new azimuth and elevation of the user in realtime
+        Updates the audio data based on the new filename read from the global queue
         """
         self.fileName = q.get()
         print("Entering HRTF - received " + str(self.fileName))
@@ -83,7 +92,7 @@ class StreamThread(threading.Thread):
             return self.zeros_2channel
         else:
 
-            # Mess with aIndex
+            # Mess with aIndex to simulate HRTF
             if self.aIndex == 24:
                 self.increaseFlag = False
             elif self.aIndex == 0:
@@ -150,6 +159,11 @@ class StreamThread(threading.Thread):
         return
 
 class LocationThread(threading.Thread):
+    '''
+    LocationThread is responsible for connecting with the Dashboard program via
+    UDP, reading the latest location data, and sending the required fileName to
+    the global queue.
+    '''
     def __init__(self, name, counter, app):
         threading.Thread.__init__(self)
         self.threadID = counter
@@ -170,16 +184,12 @@ class LocationThread(threading.Thread):
         self.udp = UDPClient.udp_factory(host, port, beacon_add)
         self.app.log.insertToLog("Connection successfully established with Dashboard...")
 
-        # Set sleep interval
-        interval = 0.1
-
         # Get location data from Dashboard modem
         while True:
             try:
                 if stop_event.is_set():
                     break
                 else:
-                    # global user_loc
                     user_loc = self.udp.request_position()
                     distance = None
                     fileName = None
@@ -201,6 +211,9 @@ class LocationThread(threading.Thread):
         return
 
 class Log(Frame):
+    '''
+    Represents the Execution Log that you see on the right-hand side of the GUI.
+    '''
     def __init__(self, master=None):
         super().__init__(master)
 
@@ -214,6 +227,9 @@ class Log(Frame):
         self.log.configure(state="disabled")
 
 class ExhibitTable(Frame):
+    '''
+    Represents the left-hand side of the GUI.
+    '''
     def __init__(self, master=None):
         super().__init__(master)
 
@@ -290,6 +306,9 @@ class ExhibitTable(Frame):
         self.start_btn.configure(state="enabled")
 
 class Application(Frame):
+    '''
+    A wrapper class that contains the Exhibit Table and Log.
+    '''
     def __init__(self, master=None):
         super().__init__(master)
 

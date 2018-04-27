@@ -1,3 +1,7 @@
+'''
+The idea for this file was to use PyGame to show the user's current location
+'''
+
 import pygame
 pygame.init()
 pygame.display.set_caption('3D Audio for Museum Exhibits - User Location')
